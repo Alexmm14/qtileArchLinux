@@ -67,14 +67,13 @@ keys = [
     # Alt + Shift + Tab: Pasar a la ventana anterior
     Key([mod, "shift"], "Tab", lazy.group.prev_window(), desc="Ventana anterior"),
     #Lanzador
-    Key([mod], "space", lazy.spawn("rofi -show drun -show-icons"), desc="Move window focus to other window"),
+    Key([mod], "space", lazy.spawn("rofi -show drun -theme ~/.config/rofi/launchers/type-4/style-5.rasi"), desc="Move window focus to other window"),
 
     #Teclas de sonido
     # TECLAS MULTIMEDIA (ASUS TUF F15)
     # Vol++
     Key([], "XF86AudioRaiseVolume", 
-        lazy.spawn("pactl set-sink-volume @DEFAULT_SINK@ +5%")),
-    # Vol--
+    lazy.spawn("bash -c 'pactl set-sink-volume @DEFAULT_SINK@ +5%; VOLUME=$(pactl get-sink-volume @DEFAULT_SINK@ | grep -Po \"[0-9]+(?=%)\" | head -n1); [ $VOLUME -gt 100 ] && pactl set-sink-volume @DEFAULT_SINK@ 100%'")),    # Vol--
     Key([], "XF86AudioLowerVolume", 
         lazy.spawn("pactl set-sink-volume @DEFAULT_SINK@ -5%")),
     # Mute
@@ -83,9 +82,9 @@ keys = [
 
     # BRILLO (Iconos de sol en el teclado)
     Key([], "XF86MonBrightnessUp", 
-        lazy.spawn("brightnessctl set +10%")),
+        lazy.spawn("brightnessctl set +3%")),
     Key([], "XF86MonBrightnessDown", 
-        lazy.spawn("brightnessctl set 10%-")),
+        lazy.spawn("brightnessctl set 3%-")),
     # Bloquear y Suspender con Alt + L
     Key([mod], "l", lazy.spawn("bash -c '/home/alexmm14/.local/bin/lock-pro && systemctl suspend'"), desc="Suspender"),
 ]
@@ -104,7 +103,7 @@ for vt in range(1, 8):
     )
 
 
-groups = [Group(i) for i in "123456789"]
+groups = [Group(i) for i in "12345"]
 
 for i in groups:
     keys.extend(
@@ -131,19 +130,15 @@ for i in groups:
     )
 
 layouts = [
-    layout.Columns(border_focus_stack=["#d75f5f", "#8f3d3d"], border_width=4),
-    layout.Max(),
-    # Try more layouts by unleashing below layouts.
-    # layout.Stack(num_stacks=2),
-    # layout.Bsp(),
-    # layout.Matrix(),
-    # layout.MonadTall(),
-    # layout.MonadWide(),
-    # layout.RatioTile(),
-    # layout.Tile(),
-    # layout.TreeTab(),
-    # layout.VerticalTile(),
-    # layout.Zoomy(),
+    layout.Columns(
+        #Blanco 
+        border_focus="#ffffff",        # Color de la ventana activa
+        border_normal="#222222",       # Color de ventana inactiva
+        border_width=2,                # Grosor del borde
+        margin=2,                      # EL ESPACIO DE 1px que querías
+        border_focus_stack=["#d75f5f", "#8f3d3d"], 
+    ),
+    layout.Max(margin=1),              # También le ponemos margen al modo pantalla completa
 ]
 
 widget_defaults = dict(
@@ -187,12 +182,18 @@ screens = [
                 
                 # Widget de Volumen
                 widget.Volume(
-                    fmt='󰕾 {}', # Icono de parlante
+                    fmt='󰕾 {}',
                     padding=10,
-                    foreground="#66ffff", # Cian
-                    # Al hacer scroll sobre el número, también cambia el volumen
+                    foreground="#66ffff",
+                    # Esto obliga al widget a usar 'pactl' para obtener el dato real
+                    get_volume_command="pactl get-sink-volume @DEFAULT_SINK@",
+                    # Esto le dice cómo verificar si está muteado
+                    check_mute_command="pactl get-sink-mute @DEFAULT_SINK@",
+                    check_mute_string="Mute: yes",
+                    # Muestra esto cuando NO esté muteado (el volumen)
+                    update_interval=0.2,
                 ),
-                widget.Clock(format="%Y-%m-%d %a %I:%M %p"),
+                widget.Clock(format="%d-%m-%Y %a %I:%M %p"),
             ],
             24,
         ),
@@ -280,6 +281,7 @@ def autostart():
     # Esto buscará cuál de tus perfiles (duo o solo) encaja con lo que hay conectado
     os.system("autorandr --change &")
     os.system("feh --bg-fill /home/alexmm14/.secrets/wallpapers/143453-Arch_Linux.jpg")
+    os.system("picom &")
 
 
 

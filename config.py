@@ -11,6 +11,7 @@ import asyncio
 
 
 mod = "mod1"
+windows = "mod4"
 terminal = guess_terminal()
 
 keys = [
@@ -87,6 +88,9 @@ keys = [
         lazy.spawn("brightnessctl set 3%-")),
     # Bloquear y Suspender con Alt + L
     Key([mod], "l", lazy.spawn("bash -c '/home/alexmm14/.local/bin/lock-pro && systemctl suspend'"), desc="Suspender"),
+    # Captura con formato: screenshot_2026-04-18_16-05.png
+    Key([], "Print", lazy.spawn("sh -c 'maim ~/Images/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png'")),
+    Key([windows, "shift"], "s", lazy.spawn("sh -c 'maim -s | xclip -selection clipboard -t image/png'")),
 ]
 
 # Add key bindings to switch VTs in Wayland.

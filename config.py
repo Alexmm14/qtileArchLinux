@@ -7,6 +7,9 @@ from libqtile.config import Click, Drag, Group, Key, Match, Output, Screen
 from libqtile.lazy import lazy
 from libqtile.utils import guess_terminal
 import asyncio
+#from modules.functions import show_volume
+#from libqtile.log_utils import logger # <--- Importante para debug
+
 
 
 
@@ -74,7 +77,8 @@ keys = [
     # TECLAS MULTIMEDIA (ASUS TUF F15)
     # Vol++
     Key([], "XF86AudioRaiseVolume", 
-    lazy.spawn("bash -c 'pactl set-sink-volume @DEFAULT_SINK@ +5%; VOLUME=$(pactl get-sink-volume @DEFAULT_SINK@ | grep -Po \"[0-9]+(?=%)\" | head -n1); [ $VOLUME -gt 100 ] && pactl set-sink-volume @DEFAULT_SINK@ 100%'")),    # Vol--
+    lazy.spawn("bash -c 'pactl set-sink-volume @DEFAULT_SINK@ +5%; VOLUME=$(pactl get-sink-volume @DEFAULT_SINK@ | grep -Po \"[0-9]+(?=%)\" | head -n1); [ $VOLUME -gt 100 ] && pactl set-sink-volume @DEFAULT_SINK@ 100%'")),    
+    # Vol--
     Key([], "XF86AudioLowerVolume", 
         lazy.spawn("pactl set-sink-volume @DEFAULT_SINK@ -5%")),
     # Mute
@@ -87,7 +91,7 @@ keys = [
     Key([], "XF86MonBrightnessDown", 
         lazy.spawn("brightnessctl set 3%-")),
     # Bloquear y Suspender con Alt + L
-    Key([mod], "l", lazy.spawn("bash -c '/home/alexmm14/.local/bin/lock-pro && systemctl suspend'"), desc="Suspender"),
+    Key([windows], "l", lazy.spawn("bash -c '/home/alexmm14/.local/bin/lock-pro && systemctl suspend'"), desc="Suspender"),
     # Captura con formato: screenshot_2026-04-18_16-05.png
     Key([], "Print", lazy.spawn("sh -c 'maim ~/Images/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png'")),
     Key([windows, "shift"], "s", lazy.spawn("sh -c 'maim -s | xclip -selection clipboard -t image/png'")),
@@ -162,20 +166,38 @@ screens = [
                 widget.GroupBox(),
                 widget.Prompt(),  # <--- ASEGÚRATE DE QUE ESTA COMA ESTÉ AQUÍ
                 widget.TaskList(
-                    icon_size=24,                 # Un poco más grande para que se vea mejor
+                    icon_size=20,
                     font="sans",
-                    borderwidth=0,                # Quitamos bordes para un look más limpio
+                    borderwidth=0,
                     margin_y=2,
-                    padding_y=2,
+                    padding_y=3,
                     padding_x=5,
                     highlight_method='block',
-                    title_width_method='uniform', # Mantiene el tamaño del botón constante
-                    max_title_width=40,           # Limitamos el ancho para que casi no quepa texto
-                    # El truco: una función que devuelve un string vacío en lugar del nombre
+                    title_width_method='uniform',
+                    max_title_width=40,
                     parse_text=lambda text: "",
-                    theme_path="/usr/share/icons/Papirus",
+                    theme_mode='preferred',
+                    theme_path='/usr/share/icons/Papirus',
+                    # Comenta theme_path momentáneamente si sigue fallando, 
+                    # para forzar a Qtile a usar solo el mapping.
+                    # theme_path="/usr/share/icons/Papirus",
                 ),
-                widget.Systray(),
+                #widget.Systray(),
+                widget.Battery(
+                    format='{char} {percent:2.0%}',
+                    charge_char='󰂄',
+                    discharge_char='󰁹',
+                    empty_char='󰂎',
+                    full_char='󰁹',
+                    unknown_char='󰂑',
+                    low_foreground='#ff0000',
+                    low_percentage=0.2,
+                    padding=10,
+                ),
+                widget.TextBox(
+                    text=' | ',
+                    foreground="#555555",
+                ),
                 # Widget de Brillo
                 widget.Backlight(
                     backlight_name='intel_backlight',
@@ -188,6 +210,7 @@ screens = [
                 widget.Volume(
                     fmt='󰕾 {}',
                     padding=10,
+                    name='volume_widget',  # Nombre para identificarlo
                     foreground="#66ffff",
                     # Esto obliga al widget a usar 'pactl' para obtener el dato real
                     get_volume_command="pactl get-sink-volume @DEFAULT_SINK@",

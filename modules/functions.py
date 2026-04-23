@@ -42,3 +42,51 @@ def show_volume(qtile):
             logger.error(f"Error en show_volume: {e}")
     else:
         logger.error("No se encontró 'volume_widget'. Revisa el name en config.py")
+
+
+def init_widgets_list(widget):
+    widgets_list = [
+        #widget.CurrentLayout(),
+        widget.GroupBox(
+            disable_drag=True,
+        ),
+        widget.Prompt(),
+        widget.TaskList(
+            icon_size=20,
+            fmt='[{}]',
+            font="sans",
+            borderwidth=0,
+            margin_y=3,
+            padding_y=3,
+            padding_x=5,
+            highlight_method='block',
+            title_width_method='uniform',
+            max_title_width=40,
+            parse_text=lambda text: "",
+            theme_mode='preferred',
+            theme_path='/usr/share/icons/Papirus',
+        ),
+        widget.Backlight(
+            backlight_name='intel_backlight',
+            fmt='󰃟 {}',
+            foreground="#ffcc00",
+        ),
+        widget.TextBox(text=' | ', foreground="#555555"),
+        widget.Volume(
+            fmt='󰕾 {}',
+            foreground="#66ffff",
+            get_volume_command="pactl get-sink-volume @DEFAULT_SINK@",
+            check_mute_command="pactl get-sink-mute @DEFAULT_SINK@",
+            check_mute_string="Mute: yes",
+        ),
+        widget.TextBox(text=' | ', foreground="#555555"),
+        widget.Clock(format="%d-%m-%Y %a %H:%M:%S"),
+        widget.TextBox(text=' | ', foreground="#555555"),
+        widget.Battery(
+            format='{char} {percent:2.0%}',
+            charge_char='󰂄',
+            discharge_char='󰁹',
+            padding=10,
+        ),
+    ]
+    return widgets_list

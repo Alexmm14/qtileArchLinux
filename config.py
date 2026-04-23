@@ -7,7 +7,10 @@ from libqtile.config import Click, Drag, Group, Key, Match, Output, Screen
 from libqtile.lazy import lazy
 from libqtile.utils import guess_terminal
 import asyncio
-#from modules.functions import show_volume
+from modules.functions import init_widgets_list
+from styles.barStyle import get_bar_style
+from utils.groups import groupTemplate
+
 #from libqtile.log_utils import logger # <--- Importante para debug
 
 
@@ -69,7 +72,7 @@ keys = [
     Key([mod], "Tab", lazy.group.next_window(), desc="Siguiente ventana"),
 
     # Alt + Shift + Tab: Pasar a la ventana anterior
-    Key([mod, "shift"], "Tab", lazy.group.prev_window(), desc="Ventana anterior"),
+    Key(["control", "shift"], "Tab", lazy.screen.next_group(), desc="Pasar siguiente grupo"),
     #Lanzador
     Key([mod], "space", lazy.spawn("rofi -show drun -theme ~/.config/rofi/launchers/type-4/style-5.rasi"), desc="Move window focus to other window"),
 
@@ -91,7 +94,7 @@ keys = [
     Key([], "XF86MonBrightnessDown", 
         lazy.spawn("brightnessctl set 3%-")),
     # Bloquear y Suspender con Alt + L
-    Key([windows], "l", lazy.spawn("bash -c '/home/alexmm14/.local/bin/lock-pro && systemctl suspend'"), desc="Suspender"),
+    Key([windows], "l", lazy.spawn("bash -c '/home/alexmm14/.local/bin/lock-pro'"), desc="Suspender"),
     # Captura con formato: screenshot_2026-04-18_16-05.png
     Key([], "Print", lazy.spawn("sh -c 'maim ~/Images/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png'")),
     Key([windows, "shift"], "s", lazy.spawn("sh -c 'maim -s | xclip -selection clipboard -t image/png'")),
@@ -110,8 +113,10 @@ for vt in range(1, 8):
         )
     )
 
+groups = [Group(name, label=icon, matches=rules) for name, icon, rules in groupTemplate(Match)]
 
-groups = [Group(i) for i in "12345"]
+#groups = [Group(i) for i in "12345"]
+
 
 for i in groups:
     keys.extend(
@@ -157,85 +162,14 @@ widget_defaults = dict(
 extension_defaults = widget_defaults.copy()
 
 logo = os.path.join(os.path.dirname(libqtile.resources.__file__), "logo.png")
+
 screens = [
+    # Monitor Laptop 
+    Screen(top=bar.Bar(init_widgets_list(widget), 24, **get_bar_style())),
     # Monitor Principal (HDMI-1)
-    Screen(
-        top=bar.Bar(
-            [
-                widget.CurrentLayout(),
-                widget.GroupBox(),
-                widget.Prompt(),  # <--- ASEGÚRATE DE QUE ESTA COMA ESTÉ AQUÍ
-                widget.TaskList(
-                    icon_size=20,
-                    font="sans",
-                    borderwidth=0,
-                    margin_y=2,
-                    padding_y=3,
-                    padding_x=5,
-                    highlight_method='block',
-                    title_width_method='uniform',
-                    max_title_width=40,
-                    parse_text=lambda text: "",
-                    theme_mode='preferred',
-                    theme_path='/usr/share/icons/Papirus',
-                    # Comenta theme_path momentáneamente si sigue fallando, 
-                    # para forzar a Qtile a usar solo el mapping.
-                    # theme_path="/usr/share/icons/Papirus",
-                ),
-                #widget.Systray(),
-                widget.Battery(
-                    format='{char} {percent:2.0%}',
-                    charge_char='󰂄',
-                    discharge_char='󰁹',
-                    empty_char='󰂎',
-                    full_char='󰁹',
-                    unknown_char='󰂑',
-                    low_foreground='#ff0000',
-                    low_percentage=0.2,
-                    padding=10,
-                ),
-                widget.TextBox(
-                    text=' | ',
-                    foreground="#555555",
-                ),
-                # Widget de Brillo
-                widget.Backlight(
-                    backlight_name='intel_backlight',
-                    fmt='󰃟 {}', # Icono de sol/brillo (requiere Nerd Fonts)
-                    padding=10,
-                    foreground="#ffcc00", # Amarillo brillante
-                ),
-                
-                # Widget de Volumen
-                widget.Volume(
-                    fmt='󰕾 {}',
-                    padding=10,
-                    name='volume_widget',  # Nombre para identificarlo
-                    foreground="#66ffff",
-                    # Esto obliga al widget a usar 'pactl' para obtener el dato real
-                    get_volume_command="pactl get-sink-volume @DEFAULT_SINK@",
-                    # Esto le dice cómo verificar si está muteado
-                    check_mute_command="pactl get-sink-mute @DEFAULT_SINK@",
-                    check_mute_string="Mute: yes",
-                    # Muestra esto cuando NO esté muteado (el volumen)
-                    update_interval=0.2,
-                ),
-                widget.Clock(format="%d-%m-%Y %a %I:%M %p"),
-            ],
-            24,
-        ),
-    ),
-    # Segundo Monitor (Laptop eDP-1)
-    Screen(
-        top=bar.Bar(
-            [
-                widget.GroupBox(),
-                widget.WindowName(), # Aquí podrías usar TaskList también si quieres iconos
-                widget.Clock(format="%I:%M %p"),
-            ],
-            24,
-        ),
-    ),
+
+    Screen(top=bar.Bar(init_widgets_list(widget), 24, **get_bar_style())),
+    
 ]
 
 # Instead of screens, you can define a function here to specify which Screen
@@ -327,3 +261,26 @@ async def delayed_focus(client):
         client.focus()
     except asyncio.CancelledError:
         pass
+
+@hook.subscribe.client_new
+def follow_window(client):
+    # Función interna para esperar a la app
+    async def move_with_delay(c):
+        await asyncio.sleep(0.5) # Esperamos medio segundo
+        wm_class = c.get_wm_class()
+        
+        # Log para que veas en tu terminal qué detecta Qtile
+        from libqtile.log_utils import logger
+        logger.warning(f"Ventana detectada con clase: {wm_class}")
+
+        application = ["crx_cinhimbnkkaeohfgghhklpknlkffjgod",
+                       "crx_pjibgclleladliembfgfagdaldikeohf",
+                       ]
+        for i in application:
+            if wm_class and i in wm_class:
+                c.togroup("5")
+                qtile.current_screen.set_group(qtile.groups_map["5"])
+                break
+
+    # Lanzamos la tarea sin bloquear Qtile
+    asyncio.create_task(move_with_delay(client))

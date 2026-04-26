@@ -97,7 +97,7 @@ keys = [
     Key([windows], "l", lazy.spawn("bash -c '/home/alexmm14/.local/bin/lock-pro'"), desc="Suspender"),
     # Captura con formato: screenshot_2026-04-18_16-05.png
     Key([], "Print", lazy.spawn("sh -c 'maim ~/Images/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png'")),
-    Key([windows, "shift"], "s", lazy.spawn("sh -c 'maim -s | xclip -selection clipboard -t image/png'")),
+
 ]
 
 # Add key bindings to switch VTs in Wayland.
@@ -165,10 +165,10 @@ logo = os.path.join(os.path.dirname(libqtile.resources.__file__), "logo.png")
 
 screens = [
     # Monitor Laptop 
-    Screen(top=bar.Bar(init_widgets_list(widget), 24, **get_bar_style())),
+    Screen(top=bar.Bar(init_widgets_list(widget), 28, **get_bar_style())),
     # Monitor Principal (HDMI-1)
 
-    Screen(top=bar.Bar(init_widgets_list(widget), 24, **get_bar_style())),
+    Screen(top=bar.Bar(init_widgets_list(widget), 28, **get_bar_style())),
     
 ]
 

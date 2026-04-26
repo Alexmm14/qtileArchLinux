@@ -66,12 +66,38 @@ def init_widgets_list(widget):
             theme_mode='preferred',
             theme_path='/usr/share/icons/Papirus',
         ),
+        widget.Notify(
+            foreground="#ffffff",
+            background="#00000000",
+            font="JetBrainsMono Nerd Font",
+            fontsize=12,             # Bajamos un poco más para dar margen
+
+            # Estos tres parámetros son los que evitan el recorte
+            padding=0,               # Quitamos padding que pueda empujar el texto
+            margin_y=0,              # Sin margen vertical interno
+            line_height=1,           # Forzamos a que la línea ocupe el 100% del espacio
+
+            # Configuración de scroll
+            parse_text=lambda text: text.replace('\n', ' ').replace('\r', ''),
+            scroll=True,
+            scroll_step=3,
+            scroll_interval=0.05,
+            scroll_delay=2,
+            width=200, 
+            fmt='󰂚 {}', 
+            action=True,
+            default_timeout=5,
+            name="notification_widget",
+        ),
+        widget.TextBox(text=' | ', foreground="#555555"),   
+        #Brillo
         widget.Backlight(
             backlight_name='intel_backlight',
             fmt='󰃟 {}',
             foreground="#ffcc00",
         ),
         widget.TextBox(text=' | ', foreground="#555555"),
+        #Volumen
         widget.Volume(
             fmt='󰕾 {}',
             foreground="#66ffff",

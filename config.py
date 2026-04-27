@@ -97,7 +97,8 @@ keys = [
     Key([windows], "l", lazy.spawn("bash -c '/home/alexmm14/.local/bin/lock-pro'"), desc="Suspender"),
     # Captura con formato: screenshot_2026-04-18_16-05.png
     Key([], "Print", lazy.spawn("sh -c 'maim ~/Images/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png'")),
-    Key([windows, "shift"], "s", lazy.spawn("sh -c 'maim -s | xclip -selection clipboard -t image/png'")),
+    Key([windows, "shift"], "s", lazy.spawn("sh -c 'maim -s | tee ~/Images/screenshotArea_$(date +%Y-%m-%d_%H-%M-%S).png | xclip -selection clipboard -t image/png'")),
+    #Key([windows, "shift"], "s", lazy.spawn("sh -c 'maim -s | xclip -selection clipboard -t image/png'")),
 
 ]
 

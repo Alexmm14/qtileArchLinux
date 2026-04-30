@@ -98,8 +98,8 @@ keys = [
     # Captura con formato: screenshot_2026-04-18_16-05.png
     Key([], "Print", lazy.spawn("sh -c 'maim ~/Images/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png'")),
     Key([windows, "shift"], "s", lazy.spawn("sh -c 'maim -s | tee ~/Images/screenshotArea_$(date +%Y-%m-%d_%H-%M-%S).png | xclip -selection clipboard -t image/png'")),
-    #Key([windows, "shift"], "s", lazy.spawn("sh -c 'maim -s | xclip -selection clipboard -t image/png'")),
-
+    # Minimizar / Esconder la ventana actual felcha abajo
+    Key([windows], "Down", lazy.window.toggle_minimize(), desc="Toggle minimize"),
 ]
 
 # Add key bindings to switch VTs in Wayland.

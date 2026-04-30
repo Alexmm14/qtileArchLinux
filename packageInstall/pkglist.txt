@@ -1,4 +1,5 @@
 7zip
+act
 alacritty
 alsa-utils
 autorandr
@@ -8,11 +9,13 @@ blueman
 bluez
 bluez-utils
 brightnessctl
+clang
 cmatrix
 code
 discord
 docker
 docker-compose
+dos2unix
 efibootmgr
 fastfetch
 feh
@@ -23,6 +26,7 @@ gst-plugin-pipewire
 gvfs
 htop
 intel-ucode
+jq
 less
 libbsd
 libpulse
@@ -30,6 +34,7 @@ libva-nvidia-driver
 linux
 linux-firmware
 linux-headers
+luajit
 ly
 maim
 mesa-utils
@@ -40,6 +45,7 @@ noto-fonts-emoji
 nvidia-open
 nvidia-prime
 nvtop
+obs-studio
 openvpn
 papirus-icon-theme
 pavucontrol
@@ -49,9 +55,12 @@ pipewire
 pipewire-alsa
 pipewire-jack
 pipewire-pulse
+plymouth
 power-profiles-daemon
 python-cairosvg
 python-dbus
+python-dbus-fast
+python-dbus-next
 python-pyxdg
 qt5-declarative
 qt5-graphicaleffects
@@ -59,6 +68,7 @@ qt5-multimedia
 qt5-quickcontrols2
 qtile
 rofi
+screen
 sddm
 smartmontools
 sof-firmware
@@ -88,6 +98,7 @@ xorg-xev
 xorg-xinit
 xorg-xinput
 xorg-xsetroot
+zip
 zram-generator
 zsh
 zsh-autosuggestions

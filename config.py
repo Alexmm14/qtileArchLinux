@@ -115,7 +115,9 @@ for vt in range(1, 8):
         )
     )
 
-groups = [Group(name, label=icon, matches=rules) for name, icon, rules in groupTemplate(Match)]
+groupstmp = groupTemplate(Match)
+groups = [Group(name, label=icon, matches=rules) for name, icon, rules in groupstmp["groups"]]
+APPS_CONFIG = groupstmp["APPS_CONFIG" ]
 
 #groups = [Group(i) for i in "12345"]
 
@@ -169,7 +171,6 @@ screens = [
     # Monitor Laptop 
     Screen(top=bar.Bar(init_widgets_list(widget), 28, **get_bar_style())),
     # Monitor Principal (HDMI-1)
-
     Screen(top=bar.Bar(init_widgets_list(widget), 28, **get_bar_style())),
     
 ]
@@ -266,23 +267,25 @@ async def delayed_focus(client):
 
 @hook.subscribe.client_new
 def follow_window(client):
-    # Función interna para esperar a la app
     async def move_with_delay(c):
-        await asyncio.sleep(0.5) # Esperamos medio segundo
-        wm_class = c.get_wm_class()
+        await asyncio.sleep(0.4) # Un pelín menos de delay
+        wm_classes = c.get_wm_class() # Esto devuelve algo como ['spotify', 'Spotify']
         
-        # Log para que veas en tu terminal qué detecta Qtile
-        from libqtile.log_utils import logger
-        logger.warning(f"Ventana detectada con clase: {wm_class}")
+        if not wm_classes:
+            return
 
-        application = ["crx_cinhimbnkkaeohfgghhklpknlkffjgod",
-                       "crx_pjibgclleladliembfgfagdaldikeohf",
-                       ]
-        for i in application:
-            if wm_class and i in wm_class:
-                c.togroup("5")
-                qtile.current_screen.set_group(qtile.groups_map["5"])
+        for app_name, config in APPS_CONFIG.items():
+            target_class = config["wm_class"]
+            target_group = config["group"]
+
+            # Comparamos ignorando mayúsculas y buscando en la lista
+            if any(target_class.lower() in cls.lower() for cls in wm_classes):
+                # 1. Mover ventana
+                c.togroup(target_group)
+                # 2. Cambiar la pantalla al grupo
+                qtile.groups_map[target_group].toscreen() 
+                # 3. Dar foco a la ventana
+                c.focus()
                 break
 
-    # Lanzamos la tarea sin bloquear Qtile
     asyncio.create_task(move_with_delay(client))

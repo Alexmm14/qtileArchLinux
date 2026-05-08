@@ -72,7 +72,10 @@ keys = [
     Key([mod], "Tab", lazy.group.next_window(), desc="Siguiente ventana"),
 
     # Alt + Shift + Tab: Pasar a la ventana anterior
-    Key(["control", "shift"], "Tab", lazy.screen.next_group(), desc="Pasar siguiente grupo"),
+    # Añade estas dos líneas a tu lista keys = [...]
+    Key([windows, mod], "Right", lazy.screen.next_group(), desc="Siguiente escritorio"),
+    Key([windows, mod], "Left", lazy.screen.prev_group(), desc="Escritorio anterior"),
+
     #Lanzador
     Key([mod], "space", lazy.spawn("rofi -show drun -theme ~/.config/rofi/launchers/type-4/style-5.rasi"), desc="Move window focus to other window"),
 

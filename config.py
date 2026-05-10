@@ -155,10 +155,10 @@ layouts = [
         border_focus="#ffffff",        # Color de la ventana activa
         border_normal="#222222",       # Color de ventana inactiva
         border_width=2,                # Grosor del borde
-        margin=2,                      # EL ESPACIO DE 1px que querías
+        margin=[10, 7, 10, 7],                      # EL ESPACIO DE 1px que querías
         border_focus_stack=["#d75f5f", "#8f3d3d"], 
     ),
-    layout.Max(margin=1),              # También le ponemos margen al modo pantalla completa
+    layout.Max(margin=[10, 7, 10, 7]),              # También le ponemos margen al modo pantalla completa
 ]
 
 widget_defaults = dict(
@@ -246,9 +246,13 @@ wmname = "LG3D"
 @hook.subscribe.startup_once
 def autostart():
     # Esto buscará cuál de tus perfiles (duo o solo) encaja con lo que hay conectado
-    os.system("autorandr --change &")
-    os.system("feh --bg-fill /home/alexmm14/.secrets/wallpapers/143453-Arch_Linux.jpg")
-    os.system("picom &")
+    appStart = [
+            "autorandr --change",
+            "feh --bg-fill /home/alexmm14/.secrets/wallpapers/143453-Arch_Linux.jpg",
+            "picom --config ~/.config/picom/picom.conf"
+    ]
+    for app in appStart:
+        os.system(app + " &")
 
 
 

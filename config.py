@@ -93,9 +93,9 @@ keys = [
 
     # BRILLO (Iconos de sol en el teclado)
     Key([], "XF86MonBrightnessUp", 
-        lazy.spawn("brightnessctl set +3%")),
+        lazy.spawn("brightnessctl set +1%")),
     Key([], "XF86MonBrightnessDown", 
-        lazy.spawn("brightnessctl set 3%-")),
+        lazy.spawn("brightnessctl set 1%-")),
     # Bloquear y Suspender con Alt + L
     Key([windows], "l", lazy.spawn("bash -c '/home/alexmm14/.local/bin/lock-pro'"), desc="Suspender"),
     # Captura con formato: screenshot_2026-04-18_16-05.png
@@ -155,10 +155,10 @@ layouts = [
         border_focus="#ffffff",        # Color de la ventana activa
         border_normal="#222222",       # Color de ventana inactiva
         border_width=2,                # Grosor del borde
-        margin=2,                      # EL ESPACIO DE 1px que querías
+        margin=[10, 7, 10, 7],                      # EL ESPACIO DE 1px que querías
         border_focus_stack=["#d75f5f", "#8f3d3d"], 
     ),
-    layout.Max(margin=1),              # También le ponemos margen al modo pantalla completa
+    layout.Max(margin=[10, 7, 10, 7]),              # También le ponemos margen al modo pantalla completa
 ]
 
 widget_defaults = dict(
@@ -246,9 +246,14 @@ wmname = "LG3D"
 @hook.subscribe.startup_once
 def autostart():
     # Esto buscará cuál de tus perfiles (duo o solo) encaja con lo que hay conectado
-    os.system("autorandr --change &")
-    os.system("feh --bg-fill /home/alexmm14/.secrets/wallpapers/143453-Arch_Linux.jpg")
-    os.system("picom &")
+    appStart = [
+            "autorandr --change",
+            "feh --bg-fill /home/alexmm14/.secrets/wallpapers/143453-Arch_Linux.jpg",
+            "picom --config ~/.config/picom/picom.conf",
+            "libinput-gestures-setup start"
+    ]
+    for app in appStart:
+        os.system(app + " &")
 
 
 

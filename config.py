@@ -93,9 +93,9 @@ keys = [
 
     # BRILLO (Iconos de sol en el teclado)
     Key([], "XF86MonBrightnessUp", 
-        lazy.spawn("brightnessctl set +3%")),
+        lazy.spawn("brightnessctl set +1%")),
     Key([], "XF86MonBrightnessDown", 
-        lazy.spawn("brightnessctl set 3%-")),
+        lazy.spawn("brightnessctl set 1%-")),
     # Bloquear y Suspender con Alt + L
     Key([windows], "l", lazy.spawn("bash -c '/home/alexmm14/.local/bin/lock-pro'"), desc="Suspender"),
     # Captura con formato: screenshot_2026-04-18_16-05.png
@@ -249,7 +249,8 @@ def autostart():
     appStart = [
             "autorandr --change",
             "feh --bg-fill /home/alexmm14/.secrets/wallpapers/143453-Arch_Linux.jpg",
-            "picom --config ~/.config/picom/picom.conf"
+            "picom --config ~/.config/picom/picom.conf",
+            "libinput-gestures-setup start"
     ]
     for app in appStart:
         os.system(app + " &")

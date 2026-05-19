@@ -78,11 +78,11 @@ def groupTemplate(Match):
             matches_by_group[group_id].append(Match(wm_class=app["wm_class"]))
 
     groups =  [
-        ("1", "⬤", matches_by_group["1"]),
-        ("2", "⬤", matches_by_group["2"]), 
-        ("3", "⬤", matches_by_group["3"]), 
-        ("4", "⬤", matches_by_group["4"]), 
-        ("5", "⬤", matches_by_group["5"]), 
+        ("1", "1", matches_by_group["1"]),
+        ("2", "2", matches_by_group["2"]), 
+        ("3", "3", matches_by_group["3"]), 
+        ("4", "4", matches_by_group["4"]), 
+        ("5", "5", matches_by_group["5"]), 
     ]
 
     templateGroups = {

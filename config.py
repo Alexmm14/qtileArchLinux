@@ -248,7 +248,7 @@ def autostart():
     # Esto buscará cuál de tus perfiles (duo o solo) encaja con lo que hay conectado
     appStart = [
             "autorandr --change",
-            "feh --bg-fill /home/alexmm14/.secrets/wallpapers/143453-Arch_Linux.jpg",
+            "feh --bg-fill /home/alexmm14/.secrets/wallpapers/1yk3l4v5ygfz.png",
             "picom --config ~/.config/picom/picom.conf",
             "libinput-gestures-setup start"
     ]

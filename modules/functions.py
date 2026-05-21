@@ -48,7 +48,22 @@ def init_widgets_list(widget):
     widgets_list = [
         #widget.CurrentLayout(),
         widget.GroupBox(
-            disable_drag=True,
+        # ... tus otras configuraciones de fuentes o márgenes ...
+
+        highlight_method="border",          # Mantiene el estilo de recuadro
+        borderwidth=2,                      # Grosor del recuadro en píxeles
+
+        # --- AQUÍ CAMBIAS LOS COLORES DEL BORDE ---
+        this_current_screen_border="#FF5555", # Color del recuadro activo (Ej: Rojo, Blanco, etc.)
+        this_screen_border="#FF5555",         # Color si usas una sola pantalla
+
+        # Opcionales por si usas más de un monitor:
+        other_current_screen_border="#A3BE8C", 
+        other_screen_border="#A3BE8C",
+
+        # Colores de los puntos interiores (opcional)
+        active="#ffffff",                     # Color del punto si tiene apps
+        inactive="#4c566a",                   # Color del punto si está vacío
         ),
         widget.Prompt(),
         widget.TaskList(

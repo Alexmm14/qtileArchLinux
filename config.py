@@ -7,7 +7,7 @@ from libqtile.config import Click, Drag, Group, Key, Match, Output, Screen
 from libqtile.lazy import lazy
 from libqtile.utils import guess_terminal
 import asyncio
-from modules.functions import init_widgets_list
+from modules.functions import init_widgets_list, BarRotator
 from styles.barStyle import get_bar_style
 from utils.groups import groupTemplate
 
@@ -15,6 +15,7 @@ from utils.groups import groupTemplate
 
 
 
+# Instanciamos el rotador global
 
 mod = "mod1"
 windows = "mod4"
@@ -97,12 +98,13 @@ keys = [
     Key([], "XF86MonBrightnessDown", 
         lazy.spawn("brightnessctl set 1%-")),
     # Bloquear y Suspender con Alt + L
-    Key([windows], "l", lazy.spawn("bash -c '/home/alexmm14/.local/bin/lock-pro'"), desc="Suspender"),
+    Key([windows], "l", lazy.spawn("bash -c 'i3lock -c 000000'"), desc="Suspender"),
     # Captura con formato: screenshot_2026-04-18_16-05.png
     Key([], "Print", lazy.spawn("sh -c 'maim ~/Images/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png'")),
     Key([windows, "shift"], "s", lazy.spawn("sh -c 'maim -s | tee ~/Images/screenshotArea_$(date +%Y-%m-%d_%H-%M-%S).png | xclip -selection clipboard -t image/png'")),
     # Minimizar / Esconder la ventana actual felcha abajo
     Key([windows], "Down", lazy.window.toggle_minimize(), desc="Toggle minimize"),
+    Key([windows], "space", lazy.hide_show_bar())
 ]
 
 # Add key bindings to switch VTs in Wayland.
@@ -162,19 +164,22 @@ layouts = [
 ]
 
 widget_defaults = dict(
-    font="sans",
+    font="JetBrainsMono Nerd Font, Symbols Nerd Font",
+    #font="sans",
     fontsize=12,
     padding=3,
 )
 extension_defaults = widget_defaults.copy()
 
 logo = os.path.join(os.path.dirname(libqtile.resources.__file__), "logo.png")
+rotator = BarRotator()
+
 
 screens = [
     # Monitor Laptop 
-    Screen(top=bar.Bar(init_widgets_list(widget), 28, **get_bar_style())),
+    Screen(top=bar.Bar(init_widgets_list(widget, rotator), 28, **get_bar_style())),
     # Monitor Principal (HDMI-1)
-    Screen(top=bar.Bar(init_widgets_list(widget), 28, **get_bar_style())),
+    Screen(top=bar.Bar(init_widgets_list(widget, rotator), 28, **get_bar_style())),
     
 ]
 
@@ -247,10 +252,10 @@ wmname = "LG3D"
 def autostart():
     # Esto buscará cuál de tus perfiles (duo o solo) encaja con lo que hay conectado
     appStart = [
- #           "autorandr --change",
- #           "feh --bg-fill /home/alexmm14/.secrets/wallpapers/1yk3l4v5ygfz.png",
- #           "picom --config ~/.config/picom/picom.conf",
- #           "libinput-gestures-setup start"
+            "autorandr --change",
+            "feh --bg-fill /home/al3xmm14/.secrets/wallpapers/liquid-glass-iq-1920x1200.jpg",
+            "picom --config ~/.config/picom/picom.conf",
+            "libinput-gestures-setup start"
     ]
     for app in appStart:
         os.system(app + " &")

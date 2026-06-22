@@ -1,88 +1,109 @@
+import os
+import subprocess
 import asyncio
-from libqtile import qtile
+from datetime import datetime
+import re
 from libqtile.log_utils import logger
 
-volume_timer = None
+class BarRotator:
+    def __init__(self):
+        # Mantenemos el estado de la rotación por pantalla
+        self.screen_states = {}
 
-def show_volume(qtile):
-    logger.info("Cambiando color de volumen a visible")
-    global volume_timer
-    
-    visible_color = "#66ffff"
-    hidden_color = "#00000000"
+    def get_display_text(self, qtile_widget):
+        if not qtile_widget or not hasattr(qtile_widget, 'bar'):
+            return "Cargando..."
+            
+        screen_idx = qtile_widget.bar.screen.index
+        if screen_idx not in self.screen_states:
+            self.screen_states[screen_idx] = 0
+        
+        current_shift = self.screen_states[screen_idx]
+        
+        # 1. Obtenemos los valores actuales de cada métrica (con sus colores usando formato Pango)
+        # Usamos <span foreground='...'> para mantener tus colores originales en un solo string
+        metrics = [
+            f"<span foreground='#ffcc00'>{self.get_brightness()}</span>",  # 1
+            f"<span foreground='#66ffff'>{self.get_volume()}</span>",      # 2
+            f"<span foreground='#ffffff'>{self.get_clock()}</span>",       # 3
+            f"<span foreground='#ffffff'>{self.get_battery()}</span>"       # 4
+        ]
+        
+        # 2. Aplicamos la rotación de la lista usando el "shift" actual
+        # Si current_shift es 1, moverá el último elemento al principio, etc.
+        rotated_metrics = metrics[-current_shift:] + metrics[:-current_shift]
+        
+        # 3. Unimos los elementos usando tu separador clásico con su color gris (#555555)
+        separator = " <span foreground='#555555'>|</span> "
+        full_text = separator.join(rotated_metrics)
+        
+        # 4. Incrementamos el shift para la siguiente vuelta (0 -> 1 -> 2 -> 3 -> 0...)
+        self.screen_states[screen_idx] = (current_shift + 1) % len(metrics)
+        
+        return full_text
 
-    vol_widget = qtile.widgets_map.get('volume_widget')
-    
-    if vol_widget:
+    # --- Tus funciones de extracción quedan exactamente igual, solo quitamos los iconos del retorno 
+    # --- para manejarlos limpiamente o los dejamos dentro como prefieras:
+    def get_brightness(self):
         try:
-            # 1. Cambiamos el color a visible
-            vol_widget.foreground = visible_color
-            logger.info("Cambiando color de volumen a visible")
+            actual = int(open("/sys/class/backlight/intel_backlight/brightness").read())
+            max_b = int(open("/sys/class/backlight/intel_backlight/max_brightness").read())
+            percent = int((actual / max_b) * 100)
+            return f"󰃟 {percent}%"
+        except:
+            return "󰃟 --%"
 
-            
-            # 2. En lugar de .update(), usamos .tick() o simplemente .draw()
-            # .draw() es suficiente para mostrar el cambio de color inmediato.
-            vol_widget.draw()
+    def get_volume(self):
+        try:
+            res = subprocess.check_output(["pactl", "get-sink-volume", "@DEFAULT_SINK@"]).decode("utf-8")
+            mute = subprocess.check_output(["pactl", "get-sink-mute", "@DEFAULT_SINK@"]).decode("utf-8")
+            if "yes" in mute:
+                return "󰝟 Muted"
+            import re
+            vol = re.search(r"(\d+)%", res).group(1)
+            return f"󰕾 {vol}%"
+        except:
+            return "󰕾 --%"
 
-            # 3. Manejo del timer para ocultar
-            if volume_timer:
-                volume_timer.cancel()
+    def get_clock(self):
+        return datetime.now().strftime("%d-%m-%Y %a %H:%M:%S")
 
-            def hide():
-                try:
-                    vol_widget.foreground = hidden_color
-                    vol_widget.draw()
-                except Exception:
-                    pass
+    def get_battery(self):
+        try:
+            capacity = open("/sys/class/power_supply/BAT0/capacity").read().strip()
+            status = open("/sys/class/power_supply/BAT0/status").read().strip()
+            char = "󰂄" if status == "Charging" else "󰁹"
+            return f"{char} {capacity}%"
+        except:
+            return "󰁹 --%"
 
-            loop = asyncio.get_running_loop()
-            volume_timer = loop.call_later(3, hide)
-            
-        except Exception as e:
-            logger.error(f"Error en show_volume: {e}")
-    else:
-        logger.error("No se encontró 'volume_widget'. Revisa el name en config.py")
-
-
-def init_widgets_list(widget):
+def init_widgets_list(widget, rotator):
     widgets_list = [
-        #widget.CurrentLayout(),
         widget.GroupBox(
-
-        highlight_method="border",         
-        borderwidth=2,                     
-
-        this_current_screen_border="#FF5555", 
-        this_screen_border="#FF5555",         
-
-        other_current_screen_border="#A3BE8C", 
-        other_screen_border="#A3BE8C",
-
-        active="#ffffff",                     
-        inactive="#4c566a",                   
+            highlight_method="border",         
+            borderwidth=2,                     
+            this_current_screen_border="#FF5555", 
+            this_screen_border="#FF5555",         
+            other_current_screen_border="#A3BE8C", 
+            other_screen_border="#A3BE8C",
+            active="#ffffff",                     
+            inactive="#4c566a",                   
         ),
         widget.Prompt(),
-       widget.TaskList(
+        widget.TaskList(
             icon_size=20,
             fmt='[{}]',
             font="sans",
-
             margin_y=3,
             padding_y=3,
             padding_x=5,
-
             highlight_method='border',
-
             border="#FFFFFF",
             borderwidth=0.5,
-
             rounded=True,
-
             title_width_method='uniform',
             max_title_width=40,
-
             parse_text=lambda text: "",
-
             theme_mode='preferred',
             theme_path='/usr/share/icons/Papirus',
         ),
@@ -90,14 +111,10 @@ def init_widgets_list(widget):
             foreground="#ffffff",
             background="#00000000",
             font="JetBrainsMono Nerd Font",
-            fontsize=12,             # Bajamos un poco más para dar margen
-
-            # Estos tres parámetros son los que evitan el recorte
-            padding=0,               # Quitamos padding que pueda empujar el texto
-            margin_y=0,              # Sin margen vertical interno
-            line_height=1,           # Forzamos a que la línea ocupe el 100% del espacio
-
-            # Configuración de scroll
+            fontsize=12,             
+            padding=0,               
+            margin_y=0,              
+            line_height=1,           
             parse_text=lambda text: text.replace('\n', ' ').replace('\r', ''),
             scroll=True,
             scroll_step=3,
@@ -109,30 +126,20 @@ def init_widgets_list(widget):
             default_timeout=5,
             name="notification_widget",
         ),
-        widget.TextBox(text=' | ', foreground="#555555"),   
-        #Brillo
-        widget.Backlight(
-            backlight_name='intel_backlight',
-            fmt='󰃟 {}',
-            foreground="#ffcc00",
-        ),
         widget.TextBox(text=' | ', foreground="#555555"),
-        #Volumen
-        widget.Volume(
-            fmt='󰕾 {}',
-            foreground="#66ffff",
-            get_volume_command="pactl get-sink-volume @DEFAULT_SINK@",
-            check_mute_command="pactl get-sink-mute @DEFAULT_SINK@",
-            check_mute_string="Mute: yes",
-        ),
-        widget.TextBox(text=' | ', foreground="#555555"),
-        widget.Clock(format="%d-%m-%Y %a %H:%M:%S"),
-        widget.TextBox(text=' | ', foreground="#555555"),
-        widget.Battery(
-            format='{char} {percent:2.0%}',
-            charge_char='󰂄',
-            discharge_char='󰁹',
-            padding=10,
+        
+        # Aquí solucionamos el problema del Lambda interno
+        widget.GenPollText(
+            func=lambda: "Iniciando...",
+            update_interval=6,  
+            name="volume_widget", 
+            # IMPORTANTE: Activamos el marcado Pango para que respete los colores individuales <span foreground=...>
+            markup=True, 
         ),
     ]
+    
+    # TRUCO: Inyectamos la referencia del widget exacto DESPUÉS de crear la lista
+    # El índice [5] corresponde al ThreadPoolText dentro de la lista
+    widgets_list[5].func = lambda w=widgets_list[5]: rotator.get_display_text(w)
+    
     return widgets_list

@@ -247,10 +247,10 @@ wmname = "LG3D"
 def autostart():
     # Esto buscará cuál de tus perfiles (duo o solo) encaja con lo que hay conectado
     appStart = [
-            "autorandr --change",
-            "feh --bg-fill /home/alexmm14/.secrets/wallpapers/1yk3l4v5ygfz.png",
-            "picom --config ~/.config/picom/picom.conf",
-            "libinput-gestures-setup start"
+ #           "autorandr --change",
+ #           "feh --bg-fill /home/alexmm14/.secrets/wallpapers/1yk3l4v5ygfz.png",
+ #           "picom --config ~/.config/picom/picom.conf",
+ #           "libinput-gestures-setup start"
     ]
     for app in appStart:
         os.system(app + " &")
@@ -273,27 +273,27 @@ async def delayed_focus(client):
     except asyncio.CancelledError:
         pass
 
-@hook.subscribe.client_new
-def follow_window(client):
-    async def move_with_delay(c):
-        await asyncio.sleep(0.4) # Un pelín menos de delay
-        wm_classes = c.get_wm_class() # Esto devuelve algo como ['spotify', 'Spotify']
-        
-        if not wm_classes:
-            return
-
-        for app_name, config in APPS_CONFIG.items():
-            target_class = config["wm_class"]
-            target_group = config["group"]
-
+#@hook.subscribe.client_new
+#def follow_window(client):
+#    async def move_with_delay(c):
+#        await asyncio.sleep(0.4) # Un pelín menos de delay
+#        wm_classes = c.get_wm_class() # Esto devuelve algo como ['spotify', 'Spotify']
+#        
+#        if not wm_classes:
+#            return
+#
+#        for app_name, config in APPS_CONFIG.items():
+#            target_class = config["wm_class"]
+#            target_group = config["group"]
+#
             # Comparamos ignorando mayúsculas y buscando en la lista
-            if any(target_class.lower() in cls.lower() for cls in wm_classes):
+#           if any(target_class.lower() in cls.lower() for cls in wm_classes):
                 # 1. Mover ventana
-                c.togroup(target_group)
+#                c.togroup(target_group)
                 # 2. Cambiar la pantalla al grupo
-                qtile.groups_map[target_group].toscreen() 
+#               qtile.groups_map[target_group].toscreen() 
                 # 3. Dar foco a la ventana
-                c.focus()
-                break
+#                c.focus()
+#                break
 
-    asyncio.create_task(move_with_delay(client))
+#   asyncio.create_task(move_with_delay(client))

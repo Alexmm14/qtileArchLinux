@@ -1,15 +1,17 @@
 import os
 from collections.abc import Callable
-
 import libqtile.resources
+from libqtile.log_utils import logger
 from libqtile import bar, layout, qtile, widget, hook
 from libqtile.config import Click, Drag, Group, Key, Match, Output, Screen
 from libqtile.lazy import lazy
 from libqtile.utils import guess_terminal
 import asyncio
-from modules.functions import init_widgets_list, BarRotator
+from modules.functions import init_widgets_list, BarRotator, get_available_group, add_new_group_manually, delete_current_group
+from modules.autoStart import autostart
 from styles.barStyle import get_bar_style
 from utils.groups import groupTemplate
+import subprocess
 
 #from libqtile.log_utils import logger # <--- Importante para debug
 
@@ -42,7 +44,8 @@ keys = [
     Key([mod, "control"], "l", lazy.layout.grow_right(), desc="Grow window to the right"),
     Key([mod, "control"], "j", lazy.layout.grow_down(), desc="Grow window down"),
     Key([mod, "control"], "k", lazy.layout.grow_up(), desc="Grow window up"),
-    Key([mod], "n", lazy.layout.normalize(), desc="Reset all window sizes"),
+    Key([mod], "n", lazy.function(add_new_group_manually), desc="Create new group"),
+    Key([mod, "shift"], "n", lazy.function(delete_current_group), desc="Delete current group"),
     # Toggle between split and unsplit sides of stack.
     # Split = all windows displayed
     # Unsplit = 1 window displayed, like Max layout, but still with
@@ -120,36 +123,41 @@ for vt in range(1, 8):
         )
     )
 
-groupstmp = groupTemplate(Match)
-groups = [Group(name, label=icon, matches=rules) for name, icon, rules in groupstmp["groups"]]
-APPS_CONFIG = groupstmp["APPS_CONFIG" ]
+def go_to_group(qtile, name):
+    """
+    Cambia al grupo si existe.
+    """
+    if name in qtile.groups_map:
+        qtile.groups_map[name].toscreen()
+    else:
+        logger.error(f"Grupo {name} no encontrado")
 
-#groups = [Group(i) for i in "12345"]
+def move_window_to_group(qtile, name):
+    """
+    Mueve la ventana al grupo si existe.
+    """
+    if name in qtile.groups_map:
+        qtile.current_window.togroup(name, switch_group=True)
+    else:
+        logger.error(f"Grupo {name} no encontrado")
 
-
-for i in groups:
-    keys.extend(
-        [
-            # mod + group number = switch to group
-            Key(
-                [mod],
-                i.name,
-                lazy.group[i.name].toscreen(),
-                desc=f"Switch to group {i.name}",
-            ),
-            # mod + shift + group number = switch to & move focused window to group
-            Key(
-                [mod, "shift"],
-                i.name,
-                lazy.window.togroup(i.name, switch_group=True),
-                desc=f"Switch to & move focused window to group {i.name}",
-            ),
-            # Or, use below if you prefer not to switch to that group.
-            # # mod + shift + group number = move focused window to group
-            # Key([mod, "shift"], i.name, lazy.window.togroup(i.name),
-            #     desc="move focused window to group {}".format(i.name)),
-        ]
-    )
+# Atajos para grupos (del 1 al 9)
+for i in range(1, 10):
+    name = str(i)
+    keys.extend([
+        Key(
+            [mod],
+            name,
+            lazy.function(go_to_group, name),
+            desc=f"Switch to group {name}",
+        ),
+        Key(
+            [mod, "shift"],
+            name,
+            lazy.function(move_window_to_group, name),
+            desc=f"Switch to & move focused window to group {name}",
+        ),
+    ])
 
 layouts = [
     layout.Columns(
@@ -195,8 +203,8 @@ generate_screens: Callable[[list[Output]], list[Screen]] | None = None
 
 # Drag floating layouts.
 mouse = [
-    Drag([mod], "Button1", lazy.window.set_position_floating(), start=lazy.window.get_position()),
-    Drag([mod], "Button3", lazy.window.set_size_floating(), start=lazy.window.get_size()),
+    Drag([mod], "Button1", lazy.window.set_size_floating(), start=lazy.window.get_size()),
+    Drag([mod], "Button3", lazy.window.set_position_floating(), start=lazy.window.get_position()),
     Click([mod], "Button2", lazy.window.bring_to_front()),
 ]
 
@@ -248,18 +256,12 @@ idle_inhibitors = []  # type: list
 # java that happens to be on java's whitelist.
 wmname = "LG3D"
 
-@hook.subscribe.startup_once
-def autostart():
-    # Esto buscará cuál de tus perfiles (duo o solo) encaja con lo que hay conectado
-    appStart = [
-            "autorandr --change",
-            "feh --bg-fill /home/al3xmm14/.secrets/wallpapers/liquid-glass-iq-1920x1200.jpg",
-            "picom --config ~/.config/picom/picom.conf",
-            "libinput-gestures-setup start"
-    ]
-    for app in appStart:
-        os.system(app + " &")
 
+
+@hook.subscribe.startup_once
+#Quiero cargar mi funcion de autostart
+def start():
+    autostart.startAppps()
 
 
 #Delay mouse/window
@@ -278,27 +280,42 @@ async def delayed_focus(client):
     except asyncio.CancelledError:
         pass
 
-#@hook.subscribe.client_new
-#def follow_window(client):
-#    async def move_with_delay(c):
-#        await asyncio.sleep(0.4) # Un pelín menos de delay
-#        wm_classes = c.get_wm_class() # Esto devuelve algo como ['spotify', 'Spotify']
-#        
-#        if not wm_classes:
-#            return
-#
-#        for app_name, config in APPS_CONFIG.items():
-#            target_class = config["wm_class"]
-#            target_group = config["group"]
-#
-            # Comparamos ignorando mayúsculas y buscando en la lista
-#           if any(target_class.lower() in cls.lower() for cls in wm_classes):
-                # 1. Mover ventana
-#                c.togroup(target_group)
-                # 2. Cambiar la pantalla al grupo
-#               qtile.groups_map[target_group].toscreen() 
-                # 3. Dar foco a la ventana
-#                c.focus()
-#                break
+@hook.subscribe.client_new
+def follow_window(client):
+    async def move_with_delay(c):
+        await asyncio.sleep(0.4)
+        wm_classes = c.get_wm_class()
+        
+        if not wm_classes:
+            return
 
-#   asyncio.create_task(move_with_delay(client))
+        target_group = None
+
+        # 1. Verificar reglas de APPS_CONFIG
+        for app_name, config in APPS_CONFIG.items():
+            target_class = config["wm_class"]
+            
+            if any(target_class.lower() in cls.lower() for cls in wm_classes):
+                candidate_group = config["group"]
+                
+                # Check limit
+                if len(qtile.groups_map[candidate_group].windows) < 3:
+                    target_group = candidate_group
+                else:
+                    # Regla dicta grupo lleno, buscar otro
+                    target_group = get_available_group(qtile)
+                
+                break
+        
+        # 2. Si no hay regla, usar el grupo actual o uno disponible
+        if not target_group:
+            current_group = c.group.name
+            if len(qtile.groups_map[current_group].windows) > 3:
+                 target_group = get_available_group(qtile)
+        
+        if target_group:
+            c.togroup(target_group)
+            qtile.groups_map[target_group].toscreen() 
+            c.focus()
+
+    asyncio.create_task(move_with_delay(client))
